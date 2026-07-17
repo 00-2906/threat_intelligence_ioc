@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -7,9 +7,14 @@ import Grid from "@mui/material/Grid";
 import Divider from "@mui/material/Divider";
 import FileUploader from "./components/FileUploader";
 import SummaryPanel from "./components/SummaryPanel";
+import Header from "./components/Header";
 import axios from "axios";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/summarize";
+
+const SAMPLE_CODE = `# Example demo file\n\nimport os\n\n# TODO: replace with real logic\ndef greet(name):\n    # greet a user\n    print(f"Hello, {name}")\n\nclass Example:\n    def run(self):\n        greet('world')\n`;
 
 export default function App() {
   const [file, setFile] = useState(null);
@@ -18,6 +23,9 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
+  const [dark, setDark] = useState(true);
+
+  const theme = useMemo(() => createTheme({ palette: { mode: dark ? 'dark' : 'light', primary: { main: '#4f46e5' } } }), [dark]);
 
   const handleStart = async () => {
     if (!file) return;
@@ -50,49 +58,65 @@ export default function App() {
     }
   };
 
+  const handleDemo = () => {
+    // create a File object from sample code and set it as selected file
+    try {
+      const demoFile = new File([SAMPLE_CODE], "demo_example.py", { type: "text/plain" });
+      setFile(demoFile);
+    } catch (e) {
+      // older browsers may not support File ctor; fallback to blob
+      const blob = new Blob([SAMPLE_CODE], { type: "text/plain" });
+      blob.name = "demo_example.py";
+      setFile(blob);
+    }
+  };
+
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>Code Insight — Instant Summaries</Typography>
-      <Typography color="text.secondary" gutterBottom>
-        Polished frontend for fast summarization, previews, and downloads — ready for hackathons.
-      </Typography>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Header dark={dark} setDark={setDark} onDemo={handleDemo} />
+        <Typography color="text.secondary" gutterBottom>
+          Polished frontend for fast summarization, previews, and downloads — ready for hackathons.
+        </Typography>
 
-      <Paper sx={{ p: 3, mt: 2 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={5}>
-            <FileUploader
-              file={file}
-              onFile={setFile}
-              options={options}
-              onOptions={setOptions}
-              onStart={handleStart}
-              processing={processing}
-              uploadProgress={uploadProgress}
-            />
+        <Paper sx={{ p: 3, mt: 2 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={5}>
+              <FileUploader
+                file={file}
+                onFile={setFile}
+                options={options}
+                onOptions={setOptions}
+                onStart={handleStart}
+                processing={processing}
+                uploadProgress={uploadProgress}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={7}>
+              <SummaryPanel
+                file={file}
+                result={result}
+                processing={processing}
+                error={error}
+              />
+            </Grid>
           </Grid>
 
-          <Grid item xs={12} md={7}>
-            <SummaryPanel
-              file={file}
-              result={result}
-              processing={processing}
-              error={error}
-            />
-          </Grid>
-        </Grid>
-
-        <Box mt={3}>
-          <Divider />
-          <Box mt={2} display="flex" justifyContent="space-between">
-            <Typography variant="caption" color="text.secondary">
-              Tip: Use smaller chunk sizes for very long or very dense files.
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Backend API: POST /api/summarize
-            </Typography>
+          <Box mt={3}>
+            <Divider />
+            <Box mt={2} display="flex" justifyContent="space-between">
+              <Typography variant="caption" color="text.secondary">
+                Tip: Use smaller chunk sizes for very long or very dense files.
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Backend API: POST /api/summarize
+              </Typography>
+            </Box>
           </Box>
-        </Box>
-      </Paper>
-    </Container>
+        </Paper>
+      </Container>
+    </ThemeProvider>
   );
 }

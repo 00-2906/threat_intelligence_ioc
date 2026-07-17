@@ -1,10 +1,11 @@
-import React, { useRef } from "react";
+import React, { useRef, useCallback } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import LinearProgress from "@mui/material/LinearProgress";
+import Paper from "@mui/material/Paper";
 
 export default function FileUploader({ file, onFile, options, onOptions, onStart, processing, uploadProgress }) {
   const inputRef = useRef();
@@ -14,16 +15,29 @@ export default function FileUploader({ file, onFile, options, onOptions, onStart
     if (f) onFile(f);
   };
 
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const f = e.dataTransfer?.files?.[0];
+    if (f) onFile(f);
+  }, [onFile]);
+
+  const handleDragOver = useCallback((e) => { e.preventDefault(); }, []);
+
   return (
     <Box>
       <Typography variant="h6">Upload source file</Typography>
-      <Box mt={1} display="flex" gap={2} alignItems="center">
-        <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => inputRef.current.click()}>
-          Choose file
-        </Button>
-        <input ref={inputRef} type="file" hidden onChange={handlePick} accept=".py,.js,.ts,.java,.go,.c,.cpp,.cs,.txt" />
-        <Typography color="text.secondary">{file ? file.name : "No file selected"}</Typography>
-      </Box>
+
+      <Paper variant="outlined" sx={{ p: 2, mt: 1 }} onDrop={handleDrop} onDragOver={handleDragOver}>
+        <Box display="flex" gap={2} alignItems="center">
+          <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => inputRef.current.click()}>
+            Choose file
+          </Button>
+          <input ref={inputRef} type="file" hidden onChange={handlePick} accept=".py,.js,.ts,.java,.go,.c,.cpp,.cs,.txt" />
+          <Typography color="text.secondary">{file ? file.name + ` (${Math.round((file.size||0)/1024)} KB)` : "No file selected — or drop file here"}</Typography>
+        </Box>
+        <Typography variant="caption" color="text.secondary" mt={1}>Drag & drop a file onto this box or click Choose file.</Typography>
+      </Paper>
 
       <Box mt={2} display="grid" gap={2}>
         <TextField
