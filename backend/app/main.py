@@ -2,8 +2,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 from app.db import init_db
-from app.routers import history, scan
+from app.routers import history, scan, log_scan, summarize
+
 
 BANNER = r"""
    _____ ____   ______   _____                  
@@ -13,7 +18,7 @@ BANNER = r"""
    _| || |__| | |____   ____) | (_| (_| | | | | 
   |_____\____/ \_____| |_____/ \___\__,_|_| |_| 
 
-  🕵️  Your friendly neighborhood threat sniffer is booting up...
+  [IOC Scanner] Your friendly neighborhood threat sniffer is booting up...
 """
 
 
@@ -21,7 +26,7 @@ BANNER = r"""
 async def lifespan(app: FastAPI):
     print(BANNER)
     init_db()
-    print("  📁 scans.db ready — every scan gets remembered.\n")
+    print("  [DATABASE] Ready to store scan results\n")
     yield
 
 
@@ -34,8 +39,9 @@ app = FastAPI(
 
 app.include_router(scan.router, tags=["scan"])
 app.include_router(history.router, tags=["history"])
+app.include_router(log_scan.router, prefix="/api/logs", tags=["log-scan"])
 
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "vibe": "😎 all systems chill"}
+    return {"status": "ok", "vibe": "all systems operational"}
