@@ -1,0 +1,3 @@
+﻿Suspicious connection observed from 185.220.101.4 at 03:14 UTC
+Normal DNS query to 8.8.8.8 at 03:15 UTC
+Outbound request to evil-phish-login.com detected at 03:16 UTC

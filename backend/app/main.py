@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 import sys
 import os
@@ -35,6 +36,13 @@ app = FastAPI(
     description="AI-powered threat intelligence IOC scanner",
     version="0.1.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # tighten to your deployed frontend URL once it's live
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(scan.router, tags=["scan"])

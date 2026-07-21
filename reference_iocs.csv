@@ -1,0 +1,14 @@
+value,ioc_type,context_text,label
+185.220.101.4,ip,IP address 185.220.101.4 identified as Tor exit node used in C2 traffic,malicious
+45.155.205.233,ip,IP address 45.155.205.233 flagged as active Cobalt Strike C2 server,malicious
+evil-phish-login.com,domain,"domain evil-phish-login.com registered 2 days ago, used in phishing campaign targeting bank logins",malicious
+secure-paypa1-verify.net,domain,"domain secure-paypa1-verify.net typosquatting PayPal, hosting credential harvesting page",malicious
+http://185.220.101.4/payload.exe,url,URL http://185.220.101.4/payload.exe hosting ransomware dropper payload,malicious
+44d88612fea8a8f36de82e1278abb02f,md5,MD5 hash 44d88612fea8a8f36de82e1278abb02f matches known EICAR/malware test signature,malicious
+e99a18c428cb38d5f260853678922e03,md5,MD5 hash e99a18c428cb38d5f260853678922e03 associated with trojan dropper sample,malicious
+8.8.8.8,ip,"IP address 8.8.8.8 is Google public DNS resolver, benign well-known infrastructure",benign
+1.1.1.1,ip,"IP address 1.1.1.1 is Cloudflare public DNS resolver, benign infrastructure",benign
+google.com,domain,"domain google.com long-standing legitimate domain, benign",benign
+github.com,domain,"domain github.com legitimate code hosting platform, benign",benign
+https://github.com/anthropics/claude,url,"URL https://github.com/anthropics/claude legitimate public repository, benign",benign
+d41d8cd98f00b204e9800998ecf8427e,md5,"MD5 hash d41d8cd98f00b204e9800998ecf8427e is the hash of an empty file, benign",benign

@@ -38,15 +38,24 @@ def _abuseipdb_score(abuseipdb_data: Optional[dict]) -> float:
     return float(abuseipdb_data.get("data", {}).get("abuseConfidenceScore", 0))
 
 
+def _reputation_has_data(vt_data: Optional[dict], abuseipdb_data: Optional[dict]) -> bool:
+    """True if at least one live threat-intel source actually returned
+    scored engine/report data (not just an empty/error response)."""
+    vt_stats = _extract_vt_stats(vt_data)
+    vt_total = sum(vt_stats.get(k, 0) for k in ("malicious", "suspicious", "harmless", "undetected"))
+    abuse_present = bool(abuseipdb_data and abuseipdb_data.get("data"))
+    return vt_total > 0 or abuse_present
+
+
 def label_for_score(score: float) -> str:
     """The fun part. Feel free to rename these — they're yours."""
     if score < 20:
-        return "😎 Chill Zone"
+        return "CHILL_ZONE"
     if score < 50:
-        return "🤔 Sus Vibes"
+        return "SUS_VIBES"
     if score < 80:
-        return "🚨 Danger Zone"
-    return "☠️ Full Villain Arc"
+        return "DANGER_ZONE"
+    return "FULL_VILLAIN_ARC"
 
 
 def compute_risk(vt_data: Optional[dict], abuseipdb_data: Optional[dict]) -> tuple[float, str]:
@@ -64,3 +73,52 @@ def compute_risk(vt_data: Optional[dict], abuseipdb_data: Optional[dict]) -> tup
     combined = round(min(combined, 100.0), 1)
 
     return combined, label_for_score(combined)
+
+
+def compute_final_risk(
+    vt_data: Optional[dict],
+    abuseipdb_data: Optional[dict],
+    knn_score: float,
+    knn_label: str,
+) -> dict:
+    """
+    Combines live threat-intel reputation (VT + AbuseIPDB) with the
+    kNN similarity score against our labeled reference set.
+
+    IMPORTANT: this is a WEIGHTED BLEND, not a max()/veto. Live
+    reputation data (VT + AbuseIPDB) is treated as more trustworthy
+    than kNN similarity, because:
+      - VT/AbuseIPDB are ground-truth reports from real detection engines
+      - kNN is a similarity guess against a small, hand-curated reference
+        set, and can misfire on IOCs that are lexically/semantically
+        close to a malicious example without actually being malicious
+        (e.g. private/reserved IPs, which the seed set doesn't cover)
+
+    If reputation data exists (real engine results, not just empty),
+    it gets the majority weight. kNN only dominates when reputation
+    data is completely unavailable (e.g. API lookup failed).
+    """
+    reputation_score, reputation_label = compute_risk(vt_data, abuseipdb_data)
+    knn_score_pct = knn_score * 100  # kNN score is 0-1, convert to 0-100 scale
+
+    if _reputation_has_data(vt_data, abuseipdb_data):
+        # Reputation data exists: trust it heavily. kNN can still nudge
+        # the score up (catches things reputation feeds haven't seen
+        # yet) but can no longer single-handedly override two clean
+        # authoritative sources.
+        final_score = reputation_score * 0.75 + knn_score_pct * 0.25
+    else:
+        # No reputation data at all (e.g. both lookups failed/errored) —
+        # fall back to kNN as the only available signal.
+        final_score = knn_score_pct
+
+    final_score = round(min(final_score, 100.0), 1)
+    final_label = label_for_score(final_score)
+
+    return {
+        "final_score": final_score,
+        "final_label": final_label,
+        "reputation_score": reputation_score,
+        "knn_score": round(knn_score_pct, 1),
+        "knn_verdict": knn_label,
+    }

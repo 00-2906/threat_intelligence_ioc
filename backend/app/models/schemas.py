@@ -24,3 +24,5 @@ class ScanResponse(BaseModel):
     virustotal: Optional[dict[str, Any]] = None
     abuseipdb: Optional[dict[str, Any]] = None
     errors: list[str] = []
+    explanation: Optional[str] = None
+    cited_techniques: list[str] = []
