@@ -1,6 +1,22 @@
+# --- Core API framework ---
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
-requests==2.32.3
-python-dotenv==1.0.1
 pydantic==2.9.2
+python-dotenv==1.0.1
+requests==2.32.3
+python-multipart==0.0.9
+
+# --- LLM reasoning layer (Gemini) ---
 google-genai==0.3.0
+
+# --- Embedding + ML scoring layer ---
+torch>=2.2.0
+sentence-transformers>=2.2.2
+numpy>=1.26.0
+scikit-learn>=1.4.0
+
+# --- MITRE ATT&CK RAG layer ---
+chromadb==0.5.5
+
+# --- Report generation (log-scan PDF export) ---
+reportlab==4.2.2
